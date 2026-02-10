@@ -11,13 +11,13 @@ CACHE_DATA_DIR.mkdir(exist_ok=True)
 ENCODING = "latin-1"
 
 GDRIVE_FILES = {
-    "orders.csv": "https://drive.google.com/file/d/1_xETc5dummDrBqwStB0bVEgpJd8Y-kpl/view?usp=sharing",
-    "stores.csv": "https://drive.google.com/file/d/12m8cV5bgbilWfDGKD5l3Tungvmt3aq_D/view?usp=sharing",
-    "hubs.csv": "https://drive.google.com/file/d/1SPwz8GttbQjOP9JdqKhzeJv56KB1xSzy/view?usp=sharing",
-    "deliveries.csv": "https://drive.google.com/file/d/1z5ZpuXekP9Xy2Rw3mB7Cld3wC2M-vI2e/view?usp=sharing",
-    "drivers.csv": "https://drive.google.com/file/d/1EeecFK-4J4RzWXpAnz3eICpfvx0HEz63/view?usp=sharing",
-    "payments.csv": "https://drive.google.com/file/d/1KOHJII8tkk8kaXpCKbsEJLMXAz-ehh_w/view?usp=sharing",
-    "channels.csv": "https://drive.google.com/file/d/1xeU9ttngdzf-JOxEdn1MIzbhDiA7_bXn/view?usp=sharing",
+    "orders.csv": "1_xETc5dummDrBqwStB0bVEgpJd8Y-kpl",
+    "stores.csv": "12m8cV5bgbilWfDGKD5l3Tungvmt3aq_D",
+    "hubs.csv": "1SPwz8GttbQjOP9JdqKhzeJv56KB1xSzy",
+    "deliveries.csv": "1z5ZpuXekP9Xy2Rw3mB7Cld3wC2M-vI2e",
+    "drivers.csv": "1EeecFK-4J4RzWXpAnz3eICpfvx0HEz63",
+    "payments.csv": "1KOHJII8tkk8kaXpCKbsEJLMXAz-ehh_w",
+    "channels.csv": "1xeU9ttngdzf-JOxEdn1MIzbhDiA7_bXn",
 }
 
 def _csv_path(name: str) -> Path:
