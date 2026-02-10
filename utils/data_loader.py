@@ -12,7 +12,7 @@ DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 @st.cache_data
 def load_orders():
     """Load and preprocess the orders table."""
-    df = pd.read_csv(os.path.join(DATA_PATH, "orders.csv"))
+    df = pd.read_csv(os.path.join(DATA_PATH, "orders.csv"),encoding='latin1')
 
     # Convert moment columns to datetime
     moment_cols = [col for col in df.columns if "order_moment" in col]
@@ -24,32 +24,32 @@ def load_orders():
 
 @st.cache_data
 def load_stores():
-    return pd.read_csv(os.path.join(DATA_PATH, "stores.csv"))
+    return pd.read_csv(os.path.join(DATA_PATH, "stores.csv"),encoding='latin1')
 
 
 @st.cache_data
 def load_hubs():
-    return pd.read_csv(os.path.join(DATA_PATH, "hubs.csv"))
+    return pd.read_csv(os.path.join(DATA_PATH, "hubs.csv"),encoding='latin1')
 
 
 @st.cache_data
 def load_deliveries():
-    return pd.read_csv(os.path.join(DATA_PATH, "deliveries.csv"))
+    return pd.read_csv(os.path.join(DATA_PATH, "deliveries.csv"),encoding='latin1')
 
 
 @st.cache_data
 def load_drivers():
-    return pd.read_csv(os.path.join(DATA_PATH, "drivers.csv"))
+    return pd.read_csv(os.path.join(DATA_PATH, "drivers.csv"),encoding='latin1')
 
 
 @st.cache_data
 def load_payments():
-    return pd.read_csv(os.path.join(DATA_PATH, "payments.csv"))
+    return pd.read_csv(os.path.join(DATA_PATH, "payments.csv"),encoding='latin1')
 
 
 @st.cache_data
 def load_channels():
-    return pd.read_csv(os.path.join(DATA_PATH, "channels.csv"))
+    return pd.read_csv(os.path.join(DATA_PATH, "channels.csv"),encoding='latin1')
 
 
 @st.cache_data
