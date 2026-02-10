@@ -1,0 +1,19 @@
+# Data files (too large for GitHub, will use Git LFS or data/ folder)
+data/*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Conda
+.conda/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
