@@ -57,16 +57,18 @@ with col1:
 
 with col2:
     st.markdown("#### Payment methods")
-    payment_dist = df["payment_method"].value_counts().reset_index()
+
+    payment_dist = df["payment_method"].value_counts().nlargest(5).reset_index()
     payment_dist.columns = ["method", "count"]
 
     fig = px.pie(
         payment_dist,
         values="count",
         names="method",
-        color_discrete_sequence=px.colors.qualitative.Set3
+        color_discrete_sequence=px.colors.qualitative.Set3,
     )
-    fig.update_layout(height=400)
+    fig.update_traces(textposition="inside", textinfo="label+percent")
+    fig.update_layout(height=400, showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
