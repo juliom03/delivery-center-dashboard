@@ -33,8 +33,8 @@ def _csv_path(name: str) -> Path:
     if not file_id or "PUT_" in file_id:
         raise FileNotFoundError(f"Missing {name}. Add it to /data or set its Google Drive file id.")
 
-    url = f"https://drive.google.com/uc?id={file_id}"
-    gdown.download(url, str(p_cache), quiet=True)
+    url = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+    gdown.download(url, str(p_cache), quiet=True, fuzzy=True)
 
     if not p_cache.exists() or p_cache.stat().st_size == 0:
         raise FileNotFoundError(f"Failed to download {name}. Check sharing + file id.")
