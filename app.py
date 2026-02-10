@@ -30,7 +30,7 @@ st.title("📦 Delivery Center Brazil")
 st.markdown("### Operational analysis of a three-sided delivery marketplace")
 
 st.markdown("""
-> *This project shows an fast view of marketplace operations dataset."*
+> *This project shows a quick overview of marketplace operations dataset."*
 """)
 
 st.divider()
@@ -41,7 +41,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("#### 🧾 About the project")
     st.markdown("""
-    This dashboard analyzes **370,000+ orders** from a delivery center in Brazil,
+    This dashboard analyzes **360,000+ orders** from a delivery center in Brazil,
     focusing on operational efficiency in a marketplace that connects:
 
     - 🏪 **Stores** (restaurants and retail)
