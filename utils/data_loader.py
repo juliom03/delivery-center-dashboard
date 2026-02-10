@@ -1,69 +1,82 @@
-# utils/data_loader.py
-# Centralized data loading and preprocessing for the Delivery Center dashboard.
-# All join logic lives here so every page works with the same clean dataset.
-
 import streamlit as st
 import pandas as pd
-import os
+from pathlib import Path
+import gdown
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+BASE_DIR = Path(__file__).resolve().parents[1]
+LOCAL_DATA_DIR = BASE_DIR / "data"
+CACHE_DATA_DIR = BASE_DIR / "data_cache"
+CACHE_DATA_DIR.mkdir(exist_ok=True)
 
+ENCODING = "latin-1"
+
+GDRIVE_FILES = {
+    "orders.csv": "https://drive.google.com/file/d/1_xETc5dummDrBqwStB0bVEgpJd8Y-kpl/view?usp=sharing",
+    "stores.csv": "https://drive.google.com/file/d/12m8cV5bgbilWfDGKD5l3Tungvmt3aq_D/view?usp=sharing",
+    "hubs.csv": "https://drive.google.com/file/d/1SPwz8GttbQjOP9JdqKhzeJv56KB1xSzy/view?usp=sharing",
+    "deliveries.csv": "https://drive.google.com/file/d/1z5ZpuXekP9Xy2Rw3mB7Cld3wC2M-vI2e/view?usp=sharing",
+    "drivers.csv": "https://drive.google.com/file/d/1EeecFK-4J4RzWXpAnz3eICpfvx0HEz63/view?usp=sharing",
+    "payments.csv": "https://drive.google.com/file/d/1KOHJII8tkk8kaXpCKbsEJLMXAz-ehh_w/view?usp=sharing",
+    "channels.csv": "https://drive.google.com/file/d/1xeU9ttngdzf-JOxEdn1MIzbhDiA7_bXn/view?usp=sharing",
+}
+
+def _csv_path(name: str) -> Path:
+    p_local = LOCAL_DATA_DIR / name
+    if p_local.exists():
+        return p_local
+
+    p_cache = CACHE_DATA_DIR / name
+    if p_cache.exists() and p_cache.stat().st_size > 0:
+        return p_cache
+
+    file_id = GDRIVE_FILES.get(name)
+    if not file_id or "PUT_" in file_id:
+        raise FileNotFoundError(f"Missing {name}. Add it to /data or set its Google Drive file id.")
+
+    url = f"https://drive.google.com/uc?id={file_id}"
+    gdown.download(url, str(p_cache), quiet=True)
+
+    if not p_cache.exists() or p_cache.stat().st_size == 0:
+        raise FileNotFoundError(f"Failed to download {name}. Check sharing + file id.")
+    return p_cache
+
+def _read_csv(name: str) -> pd.DataFrame:
+    return pd.read_csv(_csv_path(name), encoding=ENCODING)
 
 @st.cache_data
 def load_orders():
-    """Load and preprocess the orders table."""
-    df = pd.read_csv(os.path.join(DATA_PATH, "orders.csv"),encoding='latin1')
-
-    # Convert moment columns to datetime
-    moment_cols = [col for col in df.columns if "order_moment" in col]
-    for col in moment_cols:
-        df[col] = pd.to_datetime(df[col], errors="coerce")
-
+    df = _read_csv("orders.csv")
+    moment_cols = [c for c in df.columns if "order_moment" in c]
+    for c in moment_cols:
+        df[c] = pd.to_datetime(df[c], errors="coerce")
     return df
-
 
 @st.cache_data
 def load_stores():
-    return pd.read_csv(os.path.join(DATA_PATH, "stores.csv"),encoding='latin1')
-
+    return _read_csv("stores.csv")
 
 @st.cache_data
 def load_hubs():
-    return pd.read_csv(os.path.join(DATA_PATH, "hubs.csv"),encoding='latin1')
-
+    return _read_csv("hubs.csv")
 
 @st.cache_data
 def load_deliveries():
-    return pd.read_csv(os.path.join(DATA_PATH, "deliveries.csv"),encoding='latin1')
-
+    return _read_csv("deliveries.csv")
 
 @st.cache_data
 def load_drivers():
-    return pd.read_csv(os.path.join(DATA_PATH, "drivers.csv"),encoding='latin1')
-
+    return _read_csv("drivers.csv")
 
 @st.cache_data
 def load_payments():
-    return pd.read_csv(os.path.join(DATA_PATH, "payments.csv"),encoding='latin1')
-
+    return _read_csv("payments.csv")
 
 @st.cache_data
 def load_channels():
-    return pd.read_csv(os.path.join(DATA_PATH, "channels.csv"),encoding='latin1')
-
+    return _read_csv("channels.csv")
 
 @st.cache_data
 def load_full_dataset():
-    """
-    Build the full analytical dataset by merging all tables.
-
-    IMPORTANT — join strategy to avoid row duplication:
-    - stores, hubs, channels: many-to-one from orders → safe direct merge
-    - payments: may have multiple rows per order (e.g. split payments)
-      → aggregate FIRST, then merge
-    - deliveries + drivers: may have multiple deliveries per order
-      → aggregate FIRST, then merge
-    """
     orders = load_orders()
     stores = load_stores()
     hubs = load_hubs()
@@ -72,57 +85,27 @@ def load_full_dataset():
     drivers = load_drivers()
     payments = load_payments()
 
-    # --------------------------------------------------
-    # Step 1: Safe many-to-one joins (no duplication risk)
-    # --------------------------------------------------
     df = orders.merge(stores, on="store_id", how="left")
     df = df.merge(hubs, on="hub_id", how="left")
     df = df.merge(channels, on="channel_id", how="left")
 
-    # --------------------------------------------------
-    # Step 2: Aggregate payments BEFORE joining
-    # One row per payment_order_id with summed amounts
-    # --------------------------------------------------
-    payments_agg = (
-        payments
-        .groupby("payment_order_id")
-        .agg(
-            payment_amount=("payment_amount", "sum"),
-            payment_fee=("payment_fee", "sum"),
-            # Keep the most common payment method per order
-            payment_method=("payment_method", lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else None),
-            payment_status=("payment_status", "first"),
-        )
-        .reset_index()
+    payments_agg = payments.groupby("payment_order_id", as_index=False).agg(
+        payment_amount=("payment_amount", "sum"),
+        payment_fee=("payment_fee", "sum"),
+        payment_method=("payment_method", lambda x: x.mode().iloc[0] if not x.mode().empty else None),
+        payment_status=("payment_status", "first"),
     )
     df = df.merge(payments_agg, on="payment_order_id", how="left")
 
-    # --------------------------------------------------
-    # Step 3: Aggregate deliveries BEFORE joining
-    # One row per delivery_order_id with key delivery info
-    # --------------------------------------------------
-    deliveries_with_drivers = deliveries.merge(drivers, on="driver_id", how="left")
-
-    deliveries_agg = (
-        deliveries_with_drivers
-        .groupby("delivery_order_id")
-        .agg(
-            delivery_distance_meters=("delivery_distance_meters", "sum"),
-            delivery_status=("delivery_status", "first"),
-            driver_modal=("driver_modal", "first"),
-            driver_type=("driver_type", "first"),
-        )
-        .reset_index()
+    deliveries_agg = deliveries.merge(drivers, on="driver_id", how="left").groupby(
+        "delivery_order_id", as_index=False
+    ).agg(
+        delivery_distance_meters=("delivery_distance_meters", "sum"),
+        delivery_status=("delivery_status", "first"),
+        driver_modal=("driver_modal", "first"),
+        driver_type=("driver_type", "first"),
     )
     df = df.merge(deliveries_agg, on="delivery_order_id", how="left")
 
-    # --------------------------------------------------
-    # Sanity check: row count should match original orders
-    # --------------------------------------------------
-    assert len(df) == len(orders), (
-        f"Row count mismatch after joins! "
-        f"Orders: {len(orders):,}, Merged: {len(df):,}. "
-        f"Check for duplicate keys in dimension tables."
-    )
-
+    assert len(df) == len(orders), f"Row mismatch: orders={len(orders):,} merged={len(df):,}"
     return df
